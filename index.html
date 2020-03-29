@@ -1,0 +1,120 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>聊天机器人demo</title>
+
+	<script type="text/javascript" src="assets/jquery.min.js"></script>
+	<script type="text/javascript" src="assets/cn.js"></script>
+	<script type="text/javascript" src="assets/tczAppsui.js"></script>
+	<link href="assets/global.css" rel="stylesheet" type="text/css">
+</head>
+
+<body style="">
+
+	<div class="ui_body" id="index">
+
+		<div class="ui_guide main" id="guide">
+			<div class="chat">
+				<div class="title">chatbot聊天</div>
+				<ul class="text" id="ui_msg_box">
+					<li class="t1">
+						<img src="assets/head1.png">
+						<div class="txt">您好！我是小菲，非常欢迎您的到来，有什么想和我聊聊的吗？</div>
+					</li>
+				</ul>
+				<div class="cont">
+					<input type="text" placeholder="在这里输入文字" class="inp" id="ui_inp_msg">
+					<a href="javascript:" class="send" onclick="sendmsg()">发送</a>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+
+
+	<script type="text/javascript">
+		$(document).ready(function ($) {
+			
+			//给聊天机机器人绑定回车发送消息事件
+			$("#ui_inp_msg").keydown(function (e) {
+				if (e.keyCode == 13) {
+					sendmsg(); //发送消息
+				}
+			});
+
+		});
+
+		function sendmsg() {
+			var msg = PZ.trim($("#ui_inp_msg").val());
+			if (msg == "") {
+				PZ.tip({
+					log: "addone",
+					obj: $("#ui_inp_msg"),
+					msg: "输入内容不能为空"
+				});
+				return;
+			}
+			$("#ui_inp_msg").val("");
+			var sendhtml = '<li class="t2"><img src="./assets/head2.jpg"><div class="txt">' + msg + '</div></li>';
+			$("#ui_msg_box").append(sendhtml);
+
+			var bothtml = '<li class="t1"><img src="assets/head1.png"><div class="txt"><div class="typing"><span class="circle"></span><span class="circle"></span><span class="circle"></span></div></div></li>';
+			$("#ui_msg_box").append(bothtml);
+			// 将展示消息的滚动条滑到底部
+			scrollMsgBottom();
+			$.ajax({
+				type: "GET",
+				url: "api.php?msg=" + PZ.en(msg),
+				dataType: "json",
+				success: function (res) {
+					//alert(res);
+					switch (res.result) {
+						case 0: //返回内容
+							//将{br}替换成换行标签
+							$("#ui_msg_box>li:last-child .typing").remove();
+							var reg = new RegExp("{br}", "g");
+							var content = res.content.replace(reg, "<br/>");
+							$("#ui_msg_box>li:last-child .txt").append(content);
+							break;
+						default: //错误信息
+							var sendhtml ='亲，您想表达什么意思呢？';
+							$("#ui_msg_box>li:last-child .typing").append(sendhtml);
+							break;
+					};
+					// 将展示消息的滚动条滑到底部
+					scrollMsgBottom();
+				},
+				error: function (jqXHR, textStatus, errorThrown) {
+					alert(
+						'An error occurred... Look at the console (F12 or Ctrl+Shift+I, Console tab) for more information!');
+
+					alert('<p>status code: ' + jqXHR.status + '</p><p>errorThrown: ' + errorThrown +
+						'</p><p>jqXHR.responseText:</p><div>' + jqXHR.responseText + '</div>');
+					console.log('jqXHR:');
+					console.log(jqXHR);
+					console.log('textStatus:');
+					console.log(textStatus);
+					console.log('errorThrown:');
+					console.log(errorThrown);
+				},
+			});
+		}
+
+		// 将聊天消息的滚动条滑到底部
+		function scrollMsgBottom() {
+			var topH = -$("#ui_msg_box").height();
+			$("#ui_msg_box>li").each(function () {
+				topH += $(this).outerHeight(true);
+			});
+			$("#ui_msg_box").animate({
+				scrollTop: topH
+			}, 200);
+		}
+	</script>
+</body>
+
+</html>
